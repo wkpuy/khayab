@@ -1,6 +1,6 @@
 # Stand Up Reminder 🧍
 
-แอพ macOS Menu Bar แจ้งเตือนให้ลุกยืนระหว่างวันทำงาน
+แอพ macOS Menu Bar แจ้งเตือนให้ลุกยืนระหว่างวันทำงาน รองรับ macOS 12 ขึ้นไป
 
 ## ติดตั้ง
 
@@ -14,16 +14,18 @@ pip3 install -r requirements.txt
 python3 stand_reminder.py
 ```
 
-จะเห็นไอคอน 🧍 ขึ้นบน Menu Bar
+ไอคอน 🧍 จะปรากฏบน Menu Bar
+
+**หมายเหตุ:** ครั้งแรกที่รัน macOS จะขอสิทธิ์แจ้งเตือน กด Allow ด้วย
 
 ## ฟีเจอร์
 
-- **แจ้งเตือนพร้อมเสียง** ทุก N นาที (default 30 นาที)
-- **กำหนดช่วงเวลาทำงาน** เช่น 09:00–18:00
-- **ยกเว้นหลายช่วงเวลา** เช่น พักเที่ยง ประชุม
-- **ปุ่ม Snooze** เลื่อนการแจ้งเตือนออกไป 5 นาที
-- **นับสถิติรายวัน** ดูว่าลุกไปกี่ครั้งแล้ว
-- **เลือกเสียงได้** Glass, Ping, Tink, Pop และอื่นๆ
+- แจ้งเตือนพร้อมเสียงทุก N นาที (default 30 นาที)
+- กำหนดช่วงเวลาทำงาน เช่น 09:00–18:00
+- ยกเว้นหลายช่วงเวลา เช่น พักเที่ยง ประชุม
+- Snooze ผ่าน Menu Bar เพื่อเลื่อนการแจ้งเตือนออกไป
+- นับสถิติรายวัน ว่าลุกไปกี่ครั้งแล้ว
+- เลือกเสียงแจ้งเตือนได้ (Glass, Ping, Tink, Pop และอื่นๆ)
 
 ## ตั้งค่า
 
@@ -43,17 +45,16 @@ python3 stand_reminder.py
 
 ## รันอัตโนมัติตอนเปิดเครื่อง
 
-**วิธีที่ 1: ใช้ script ติดตั้ง (ง่ายสุด)**
+**วิธีที่ 1: ใช้ script ติดตั้ง (แนะนำ)**
 
 ```bash
 bash install_launchagent.sh
 ```
 
-จะสร้าง LaunchAgent และเปิดให้อัตโนมัติ โปรแกรมจะรันใหม่ทุกครั้งที่ log in
-
 **วิธีที่ 2: ติดตั้งด้วยมือ**
 
-1. สร้างไฟล์ `~/Library/LaunchAgents/com.khayab.standreminder.plist` ด้วยเนื้อหา:
+1. สร้างไฟล์ `~/Library/LaunchAgents/com.khayab.standreminder.plist` แทน `PATH_TO_REPO` ด้วย path ของโฟลเดอร์นี้:
+
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -64,7 +65,7 @@ bash install_launchagent.sh
     <key>ProgramArguments</key>
     <array>
         <string>/usr/bin/python3</string>
-        <string>/Users/mtb730773/Documents/khayab/stand_reminder.py</string>
+        <string>PATH_TO_REPO/stand_reminder.py</string>
     </array>
     <key>RunAtLoad</key>
     <true/>
@@ -78,30 +79,18 @@ bash install_launchagent.sh
 </plist>
 ```
 
-2. โหลด:
+2. โหลด LaunchAgent:
+
 ```bash
 launchctl load ~/Library/LaunchAgents/com.khayab.standreminder.plist
 ```
 
 **จัดการ LaunchAgent**
 
-ตรวจสอบสถานะ:
-```bash
-launchctl list | grep standreminder
-```
-
-ดูประวัติ log:
-```bash
-tail -f /tmp/standreminder.log
-tail -f /tmp/standreminder.error.log
-```
-
-ปิด (หยุดรันอัตโนมัติ):
-```bash
-launchctl unload ~/Library/LaunchAgents/com.khayab.standreminder.plist
-```
-
-เปิดใหม่:
-```bash
-launchctl load ~/Library/LaunchAgents/com.khayab.standreminder.plist
-```
+| คำสั่ง | ความหมาย |
+|--------|----------|
+| `launchctl list \| grep standreminder` | ตรวจสอบสถานะ |
+| `tail -f /tmp/standreminder.log` | ดู log |
+| `tail -f /tmp/standreminder.error.log` | ดู error log |
+| `launchctl unload ~/Library/LaunchAgents/com.khayab.standreminder.plist` | หยุดรันอัตโนมัติ |
+| `launchctl load ~/Library/LaunchAgents/com.khayab.standreminder.plist` | เปิดใหม่ |
