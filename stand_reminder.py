@@ -4,9 +4,16 @@
 import json
 import os
 import subprocess
+import uuid
 from datetime import datetime, date, timedelta
 
 import rumps
+from UserNotifications import (
+    UNUserNotificationCenter,
+    UNMutableNotificationContent,
+    UNNotificationRequest,
+    UNTimeIntervalNotificationTrigger,
+)
 
 CONFIG_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.json")
 
@@ -117,13 +124,15 @@ class StandReminderApp(rumps.App):
     def _send_alert(self, now):
         self._play_sound()
         time_str = now.strftime("%H:%M")
-        snooze_min = self.config["snooze_minutes"]
-        script = (
-            f'display notification "นั่งนานแล้ว ลุกยืดเส้นยืดสายหน่อยนะ" '
-            f'with title "ลุกขึ้นยืนสักครู่! 🧍" '
-            f'subtitle "เวลา {time_str} — กด Snooze ที่ menu bar ถ้ายังไม่พร้อม"'
+        content = UNMutableNotificationContent.alloc().init()
+        content.setTitle_("ลุกขึ้นยืนสักครู่! 🧍")
+        content.setSubtitle_(f"เวลา {time_str}")
+        content.setBody_("นั่งนานแล้ว ลุกยืดเส้นยืดสายหน่อยนะ")
+        trigger = UNTimeIntervalNotificationTrigger.triggerWithTimeInterval_repeats_(1, False)
+        req = UNNotificationRequest.requestWithIdentifier_content_trigger_(
+            str(uuid.uuid4()), content, trigger
         )
-        subprocess.Popen(["osascript", "-e", script])
+        UNUserNotificationCenter.currentNotificationCenter().addNotificationRequest_withCompletionHandler_(req, None)
         self.stats_count += 1
         self._update_stats_item()
 
