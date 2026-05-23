@@ -42,7 +42,7 @@ class StandReminderApp(rumps.App):
         super().__init__("🧍", quit_button=None)
         self.config = self._load_config()
         self.snooze_until = None
-        self.last_alert_time = None
+        self.last_alert_slot = None
         self.stats_date = date.today()
         self.stats_count = 0
         self._rebuild_menu()
@@ -76,6 +76,10 @@ class StandReminderApp(rumps.App):
                 return False
         return True
 
+    def _current_slot(self, now):
+        minutes = now.hour * 60 + now.minute
+        return minutes // self.config["interval_minutes"]
+
     def _should_alert(self, now):
         if not self.config["enabled"]:
             return False
@@ -83,10 +87,7 @@ class StandReminderApp(rumps.App):
             return False
         if self.snooze_until and now < self.snooze_until:
             return False
-        if self.last_alert_time is None:
-            return True
-        elapsed = (now - self.last_alert_time).total_seconds() / 60
-        return elapsed >= self.config["interval_minutes"]
+        return self._current_slot(now) != self.last_alert_slot
 
     # ── Timer ──────────────────────────────────────────────────────────────────
 
@@ -106,7 +107,7 @@ class StandReminderApp(rumps.App):
             self.title = "🧍"
 
         if self._should_alert(now):
-            self.last_alert_time = now
+            self.last_alert_slot = self._current_slot(now)
             self._send_alert(now)
 
         self._update_stats_item()
@@ -137,7 +138,6 @@ class StandReminderApp(rumps.App):
     def _do_snooze(self):
         minutes = self.config["snooze_minutes"]
         self.snooze_until = datetime.now() + timedelta(minutes=minutes)
-        self.last_alert_time = self.snooze_until
         self.title = "💤"
 
     @rumps.clicked("💤 Snooze")
@@ -152,7 +152,7 @@ class StandReminderApp(rumps.App):
         self._save_config()
         self.title = "🧍" if self.config["enabled"] else "⏸"
         if self.config["enabled"]:
-            self.last_alert_time = None
+            self.last_alert_slot = self._current_slot(datetime.now())
 
     # ── Interval submenu ───────────────────────────────────────────────────────
 
@@ -165,7 +165,7 @@ class StandReminderApp(rumps.App):
 
     def _set_interval(self, minutes):
         self.config["interval_minutes"] = minutes
-        self.last_alert_time = None
+        self.last_alert_slot = None
         self._save_config()
         self._rebuild_menu()
 
