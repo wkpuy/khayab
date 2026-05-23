@@ -165,7 +165,8 @@ class StandReminderApp(rumps.App):
 
     def _set_interval(self, minutes):
         self.config["interval_minutes"] = minutes
-        self.last_alert_slot = None
+        now = datetime.now()
+        self.last_alert_slot = (now.hour * 60 + now.minute) // minutes
         self._save_config()
         self._rebuild_menu()
 
