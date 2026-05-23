@@ -116,19 +116,15 @@ class StandReminderApp(rumps.App):
     def _send_alert(self, now):
         self._play_sound()
         time_str = now.strftime("%H:%M")
-        response = rumps.notification(
-            title="ลุกขึ้นยืนสักครู่! 🧍",
-            subtitle=f"เวลา {time_str}",
-            message="นั่งนานแล้ว ลุกยืดเส้นยืดสายหน่อยนะ",
-            action_button="✅ ลุกแล้ว",
-            other_button=f"💤 Snooze {self.config['snooze_minutes']} นาที",
-            sound=False,
+        snooze_min = self.config["snooze_minutes"]
+        script = (
+            f'display notification "นั่งนานแล้ว ลุกยืดเส้นยืดสายหน่อยนะ" '
+            f'with title "ลุกขึ้นยืนสักครู่! 🧍" '
+            f'subtitle "เวลา {time_str} — กด Snooze ที่ menu bar ถ้ายังไม่พร้อม"'
         )
-        if response is None or response == "other":
-            self._do_snooze()
-        else:
-            self.stats_count += 1
-            self._update_stats_item()
+        subprocess.Popen(["osascript", "-e", script])
+        self.stats_count += 1
+        self._update_stats_item()
 
     def _play_sound(self):
         sound = self.config.get("sound", "Glass")
